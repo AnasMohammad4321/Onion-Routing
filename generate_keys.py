@@ -11,9 +11,9 @@ def generate_key_pair(entity_name):
         f.write(public_key)
 
 # Generate keys for Alice, Bob, R1, R2, R3, R4
-generate_key_pair('alice')
-generate_key_pair('bob')
-generate_key_pair('r1')
-generate_key_pair('r2')
-generate_key_pair('r3')
-generate_key_pair('r4')
+generate_key_pair('keys/alice')
+generate_key_pair('keys/bob')
+generate_key_pair('keys/r1')
+generate_key_pair('keys/r2')
+generate_key_pair('keys/r3')
+generate_key_pair('keys/r4')
