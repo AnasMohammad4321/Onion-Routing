@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import sys
 import socket
 import json
@@ -17,6 +15,15 @@ HASH_DELIMITER = b'###'
 AES_KEY = crypt.gen_aes_key()
 
 def main(message):
+    """
+    Main function to perform onion routing and handle the communication with relay nodes.
+
+    Args:
+        message (str): The original user request (URL).
+
+    Returns:
+        None
+    """
     logger.header('---- REQUEST RELAY NODES FROM DIRECTORY ----')
     relay_nodes = request_directory()
     logger.log('RELAY NODES: ', relay_nodes, True)
@@ -41,64 +48,93 @@ def main(message):
     logger.log('', result)
     # write result to html file
     logger.header('---- BEGIN WRITE RESULT TO HTML FILE ----')
-    f = open('response.html','w')
-    f.write(result)
-    f.close()
+    with open('response.html', 'w') as f:
+        f.write(result)
     logger.header('---- END WRITE RESULT TO HTML FILE ----')
     logger.header('---- OPEN ./response.html TO SEE RESPONSE ----')
 
 def request_directory():
     """
-    get list of relay nodes from directory
+    Get a list of relay nodes from the directory.
+
+    Returns:
+        dict: Dictionary containing relay nodes information.
     """
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.connect((DIRECTORY_IP, DIRECTORY_PORT))
-    payload = s.recv(8192).decode()  # payload is received as bytes, decode to get str type
+    payload = s.recv(8192).decode()  # Payload is received as bytes, decode to get str type
     s.close()
     relay_nodes = json.loads(payload)
     return relay_nodes
 
 def generate_circuit(nodes):
     """
-    randomly select order of relay nodes
+    Randomly select the order of relay nodes.
+
+    Args:
+        nodes (dict): Dictionary containing relay nodes information.
+
+    Returns:
+        list: List of tuples representing relay nodes and their corresponding AES keys.
     """
     circuit = [(str(ip), crypt.gen_aes_key()) for ip in nodes.keys()]
     shuffle(circuit)
     return circuit
 
 def serialize_payload(aes_key, message):
-    '''
-    encode payload for transmission
-    '''
+    """
+    Encode payload for transmission.
+
+    Args:
+        aes_key (bytes): AES key.
+        message (bytes): Message to be encoded.
+
+    Returns:
+        bytes: Encoded payload.
+    """
     return base64.b64encode(aes_key + HASH_DELIMITER + message)
 
 def encrypt_payload(message, circuit, relay_nodes):
-    '''
-    encrypt each layer of the request rsa_encrypt(AES_key) + aes_encrypt(M + next)
-    '''
+    """
+    Encrypt each layer of the request: rsa_encrypt(AES_key) + aes_encrypt(M + next).
+
+    Args:
+        message (str): The original user request (URL).
+        circuit (list): List of tuples representing relay nodes and their corresponding AES keys.
+        relay_nodes (dict): Dictionary containing relay nodes information.
+
+    Returns:
+        bytes: Encoded and encrypted payload.
+    """
     node_stack = circuit
-    next = message # final plaintext will be the original user request
+    next_node = message  # The final plaintext will be the original user request
     payload = b''
     while len(node_stack) != 0:
         curr_node = node_stack.pop()
         curr_node_addr = curr_node[0]
         curr_aes_key_instance = curr_node[1]
-        public_key = base64.b64decode(relay_nodes[curr_node_addr][1]) #decode public key here
-        if (isinstance(payload, tuple)):
-          encrypted_aes_key, encrypted_payload = payload
-          payload = serialize_payload(encrypted_aes_key, encrypted_payload)
-        # encrypt payload
-        payload = crypt.encrypt(curr_aes_key_instance, public_key, (payload + next.encode()))
-        next = curr_node_addr
+        public_key = base64.b64decode(relay_nodes[curr_node_addr][1])  # Decode public key here
+        if isinstance(payload, tuple):
+            encrypted_aes_key, encrypted_payload = payload
+            payload = serialize_payload(encrypted_aes_key, encrypted_payload)
+        # Encrypt payload
+        payload = crypt.encrypt(curr_aes_key_instance, public_key, (payload + next_node.encode()))
+        next_node = curr_node_addr
 
     return serialize_payload(payload[0], payload[1])
 
-
 def decrypt_payload(payload, circuit):
-    '''
-    decrypt each layer of the request
-    '''
+    """
+    Decrypt each layer of the request.
+
+    Args:
+        payload (bytes): Encoded and encrypted payload.
+        circuit (list): List of tuples representing relay nodes and their corresponding AES keys.
+
+    Returns:
+        bytes: Decrypted message.
+    """
     message = payload
     for i in range(len(circuit)):
         aes_key = circuit[i][1]
@@ -121,13 +157,17 @@ def decrypt_payload(payload, circuit):
 
     return message
 
-
-
-
 def send_request(encrypted_message, entry_node):
-    '''
-    send request to first relay node
-    '''
+    """
+    Send a request to the first relay node.
+
+    Args:
+        encrypted_message (bytes): Encoded and encrypted payload.
+        entry_node (str): Address of the entry relay node.
+
+    Returns:
+        bytes: Response from the destination.
+    """
     host, port = entry_node.split(':')
     relay_socket = socket.socket()
     relay_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -138,16 +178,17 @@ def send_request(encrypted_message, entry_node):
     relay_socket.sendall(payload)
     response = b""
     while True:
-      incomingBuffer = relay_socket.recv(8192)
-      print('buffer length', len(incomingBuffer), incomingBuffer)
-      if not incomingBuffer: break
-      response += incomingBuffer
+        incoming_buffer = relay_socket.recv(8192)
+        print('buffer length', len(incoming_buffer), incoming_buffer)
+        if not incoming_buffer:
+            break
+        response += incoming_buffer
 
     relay_socket.close()
     return response
 
 if __name__ == '__main__':
-  if len(sys.argv) < 2:
-      raise Exception('No URL entered')
-  url = sys.argv[1]
-  main(url)
+    if len(sys.argv) < 2:
+        raise Exception('No URL entered')
+    url = sys.argv[1]
+    main(url)
