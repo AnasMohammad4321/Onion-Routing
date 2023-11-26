@@ -1,89 +1,84 @@
-import struct
-import socket
-import sys
+import struct, socket, sys
 
 def recv_by_size(socket_conn):
-    """Receive data from a socket connection with size information.
+  """_summary_
 
-    Args:
-        socket_conn (socket.socket): The socket connection.
+  Args:
+      socket_conn (_type_): _description_
 
-    Returns:
-        bytes: The received data.
-    """
-    # Data length is packed into 4 bytes
-    total_len = 0
-    payload = b''
-    size = sys.maxsize
-    size_data = sock_data = b''
-    recv_size = 8192
+  Returns:
+      _type_: _description_
+  """
+  # data length is packed into 4 bytes
+  total_len = 0; payload = b''; size = sys.maxsize
+  size_data = sock_data = b''; recv_size = 8192
 
-    while total_len < size:
-        sock_data = socket_conn.recv(recv_size)
+  while (total_len < size):
+    sock_data = socket_conn.recv(recv_size)
 
-        if not payload:
-            if len(sock_data) > 4:
-                size_data += sock_data
-                size = struct.unpack('>i', size_data[:4])[0]
-                recv_size = size
+    if not payload:
+      if len(sock_data)>4:
+        size_data += sock_data
+        size=struct.unpack('>i', size_data[:4])[0]
+        recv_size=size
 
-                if recv_size > 524288:
-                    recv_size = 524288
-                payload += size_data[4:]
-            else:
-                size_data += sock_data
-        else:
-            payload += sock_data
-        total_len = len(payload)
+        if recv_size>524288: recv_size=524288
+        payload += size_data[4:]
+      else:
+        size_data+=sock_data
 
-    return payload
+    else:
+      payload += sock_data
+    total_len = len(payload)
 
-def start_server(host, port):
-    """Start a server socket for incoming connections.
+  return payload
 
-    Args:
-        host (str): The host address to bind to.
-        port (int): The port number to bind to.
+def start_server(host ,port):
+  """_summary_
 
-    Returns:
-        socket.socket: The server socket.
-    """
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_socket.bind((host, port))
-    server_socket.listen(5)
+  Args:
+      host (_type_): _description_
+      port (_type_): _description_
 
-    return server_socket
+  Returns:
+      _type_: _description_
+  """
+  server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  server_socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+  server_socket.bind((host, port))
+  server_socket.listen(5)
 
-def connect_server(forward_host, forward_port, connect_host, connect_port):
-    """Connect to a server with a client socket.
+  return server_socket
 
-    Args:
-        forward_host (str): The local host address to bind to.
-        forward_port (int): The local port number to bind to.
-        connect_host (str): The remote host address to connect to.
-        connect_port (int): The remote port number to connect to.
+def connect_server(forward_host, foward_port, connect_host, connect_port):
+  """_summary_
 
-    Returns:
-        socket.socket: The connected client socket.
-    """
-    connection_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    connection_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    connection_socket.bind((forward_host, forward_port))
-    connection_socket.connect((connect_host, int(connect_port)))
+  Args:
+      forward_host (_type_): _description_
+      foward_port (_type_): _description_
+      connect_host (_type_): _description_
+      connect_port (_type_): _description_
 
-    return connection_socket
+  Returns:
+      _type_: _description_
+  """
+  connection_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  connection_socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+  connection_socket.bind((forward_host, foward_port))
+  connection_socket.connect((connect_host, int(connect_port)))
+
+  return connection_socket
 
 def prepend_length(message):
-    """Prepend the length of a message to the message itself.
+  """_summary_
 
-    Args:
-        message (bytes): The message to be prefixed.
+  Args:
+      message (_type_): _description_
 
-    Returns:
-        bytes: The length-prefixed message.
-    """
-    packet_size = struct.pack('>i', len(message))
-    payload = packet_size + message
+  Returns:
+      _type_: _description_
+  """
+  packet_size = struct.pack('>i', len(message))
+  payload = packet_size + message
 
-    return payload
+  return payload
