@@ -1,13 +1,8 @@
-#!/usr/bin/env python3
-
-# python modules
 import socket
 import json
 import base64
 import requests
 import traceback
-
-# lightweight_tor modules
 import crypt
 import network
 import logger

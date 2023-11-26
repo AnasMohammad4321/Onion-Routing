@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import base64
 import socket
 import json
@@ -32,9 +31,8 @@ def listen():
     clientsocket.close()
     return
 
-def get_private_key(): #delete later
+def get_private_key():
   return RELAY_NODES
-
 
 if __name__ == '__main__':
     main()
