@@ -3,3 +3,4 @@
 *.pyc
 dev
 *.html
+/__pycache__ 
