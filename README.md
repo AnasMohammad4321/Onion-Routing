@@ -18,11 +18,15 @@ This repository contains a basic implementation of Onion Routing, a technique fo
 ```
 git clone https://github.com/AnasMohammad4321/Onion-Routing.git
 ```
-2. Activate the virtual environment
+2. Move to project's directory
+```
+cd Onion-Routing
+```
+3. Activate the virtual environment
 ```
 source dev/bin/activate
 ```
-3. Install the required packages:
+4. Install the required packages:
 ```
 pip install -r requirements.txt
 ```
