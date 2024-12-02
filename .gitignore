@@ -1,6 +1,16 @@
-.DS_Store
 .git
-*.pyc
-dev
 *.html
-/__pycache__ 
+
+# Ignore virtual environment
+venv/
+
+# Ignore Python bytecode
+*.pyc
+__pycache__/
+
+# Ignore macOS specific files
+.DS_Store
+
+# Ignore IDE project files (e.g., for VSCode)
+.vscode/
+.idea/
